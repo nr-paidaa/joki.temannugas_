@@ -180,7 +180,7 @@ document.getElementById('orderForm').addEventListener('submit', function (e) {
         return;
     }
 
-    // Buat pesan dasar
+    // Buat pesan dengan informasi file
     let message = `Halo, saya ingin order joki tugas:
 
 *Nama:* ${nama}
@@ -189,51 +189,28 @@ document.getElementById('orderForm').addEventListener('submit', function (e) {
 *Detail Tugas & Deadline:*
 ${detailTugas}`;
 
-    // Fungsi helper untuk membuka WhatsApp Web (Fallback)
-    const openWhatsAppFallback = () => {
-        // Tambahkan informasi list file ke pesan teks karena tidak bisa attach langsung
-        if (uploadedFiles.length > 0) {
-            message += `\n\n*File Terlampir:* ${uploadedFiles.length} file`;
-            uploadedFiles.forEach((file, index) => {
-                message += `\n${index + 1}. ${file.name} (${formatFileSize(file.size)})`;
-            });
-            message += `\n\n_Catatan: File akan saya kirim setelah chat ini_`;
-        }
-
-        message += `\n\nMohon informasi estimasi harga dan waktu pengerjaannya. Terima kasih!`;
-
-        const encodedMessage = encodeURIComponent(message);
-        const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
-        redirectToWhatsApp(whatsappURL);
-    };
-
-    // Coba gunakan Web Share API (Android/iOS/Supported Desktop)
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: uploadedFiles }) && uploadedFiles.length > 0) {
-
-        // Tambahkan penutup pesan
-        const messageForShare = message + `\n\nMohon informasi estimasi harga dan waktu pengerjaannya. Terima kasih!`;
-
-        navigator.share({
-            title: 'Order Joki Tugas',
-            text: messageForShare,
-            files: uploadedFiles
-        })
-            .then(() => {
-                console.log('Berhasil dibagikan');
-                // Opsional: Reset form setelah berhasil share
-            })
-            .catch((error) => {
-                console.log('Gagal membagikan', error);
-                // Jika user membatalkan atau error, tetap jalankan fallback ke WhatsApp Web
-                // Tapi cek dulu errornya apa, biasanya AbortError kalau user cancel
-                if (error.name !== 'AbortError') {
-                    openWhatsAppFallback();
-                }
-            });
-    } else {
-        // Jika tidak support Web Share API atau tidak ada file
-        openWhatsAppFallback();
+    // Tambahkan informasi file jika ada
+    if (uploadedFiles.length > 0) {
+        message += `\n\n*File Terlampir:* ${uploadedFiles.length} file`;
+        uploadedFiles.forEach((file, index) => {
+            message += `\n${index + 1}. ${file.name} (${formatFileSize(file.size)})`;
+        });
+        message += `\n\n_Catatan: File akan saya kirim setelah chat ini_`;
     }
+
+    message += `\n\nMohon informasi estimasi harga dan waktu pengerjaannya. Terima kasih!`;
+
+    // Encode pesan untuk URL
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+
+    // Redirect ke WhatsApp
+    redirectToWhatsApp(whatsappURL);
+
+    // Reset form setelah submit (opsional)
+    // this.reset();
+    // uploadedFiles = [];
+    // renderFileList();
 });
 
 /**
